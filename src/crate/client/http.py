@@ -9,7 +9,9 @@ import threading
 import requests
 
 from crate.client.exceptions import (
-    ConnectionError, DigestNotFoundException, ProgrammingError)
+    ConnectionError, DigestNotFoundException, ProgrammingError,
+    InvalidDigestException
+)
 
 
 logger = logging.getLogger(__name__)
@@ -84,12 +86,27 @@ class Client(object):
             path += digest
         return path
 
+    def _validate_digest(self, table, digest):
+        """ verify that digest seems valid
+
+        :param table:
+            name of the blob enabled table
+        :param digest:
+            digest to validate
+        :throws:
+            InvalidDigestException if digest is None or != 40 characters
+        """
+        if not digest or len(digest) != 40:
+            raise InvalidDigestException(table, digest)
+
     def blob_put(self, table, digest, data):
         """
         Stores the contents of the file like @data object in a blob under the
         given table and digest.
         """
-        response = self._request('PUT', self._blob_path(table, digest), data=data)
+        self._validate_digest(table, digest)
+        response = self._request(
+            'PUT', self._blob_path(table, digest), data=data)
         if response.status_code == 201:
             return True
         elif response.status_code == 409:
@@ -100,6 +117,7 @@ class Client(object):
         """
         Deletes the blob with given digest under the given table.
         """
+        self._validate_digest(table, digest)
         response = self._request('DELETE', self._blob_path(table, digest))
         if response.status_code == 204:
             return True
@@ -112,8 +130,8 @@ class Client(object):
         Returns a file like object representing the contents of the blob with the given
         digest.
         """
+        self._validate_digest(table, digest)
         response = self._request('GET', self._blob_path(table, digest), stream=True)
-
         if response.status_code == 404:
             raise DigestNotFoundException(table, digest)
         self._raise_for_status(response)
@@ -123,6 +141,7 @@ class Client(object):
         """
         Returns true if the blob with the given digest exists under the given table.
         """
+        self._validate_digest(table, digest)
         response = self._request('HEAD', self._blob_path(table, digest))
         if response.status_code == 200:
             return True
