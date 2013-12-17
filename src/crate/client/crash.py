@@ -36,12 +36,29 @@ from appdirs import user_data_dir
 
 from cmd import Cmd
 from argparse import ArgumentParser
-from time import time
 
 from prettytable import PrettyTable
 from crate import client
 from crate.client.exceptions import ConnectionError, Error, Warning
 from crate.client.compat import raw_input
+
+
+def _validate_field_names(self, val):
+    # copied from PrettyTable source.
+    # Almost the same but doesn't raise an exception if columns aren't unique.
+    if self._field_names and len(val) != len(self._field_names):
+        raise Exception(
+            ("Field name list has incorrect number of values."
+             "(actual) %d!=%d (expected)") % ((len(val),
+                                               len(self._field_names))))
+    if self._rows and len(val) != len(self._rows[0]):
+        raise Exception(
+            ("Field name list has incorrect number of values."
+             "(actual) %d!=%d (expected)") % (len(val), len(self._rows[0])))
+
+
+# overwrite to allow multiple columns with the same name in the output
+PrettyTable._validate_field_names = _validate_field_names
 
 
 class CrateCmd(Cmd):

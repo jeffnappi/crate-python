@@ -75,3 +75,13 @@ them without any special arguments like this::
     | NULL                               | Galaxy      |
     +------------------------------------+-------------+
     SELECT 13 rows in set (... sec)
+
+Having non-unique column names in the output should be possible::
+
+    cr> select name, kind as name from locations limit 1
+    +-------+-------------+
+    | name  | name        |
+    +-------+-------------+
+    | Algol | Star System |
+    +-------+-------------+
+    SELECT 1 row in set (... sec)
