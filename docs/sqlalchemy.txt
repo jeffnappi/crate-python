@@ -193,14 +193,6 @@ This will generate a UPDATE statement roughly like this::
 
     >>> refresh("characters")
 
-If a query is done on a element inside a dictionary only one of the
-dictionaries inside the dictionaries has to match in order for the result to be
-returned::
-
-    >>> query = session.query(Character.name)
-    >>> query.filter(Character.more_details['foo'] == 1).all()
-    [(u'Arthur Dent',)]
-
 
 Count and Group By
 ==================
